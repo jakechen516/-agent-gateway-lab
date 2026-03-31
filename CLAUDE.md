@@ -29,10 +29,9 @@ Agent Gateway Lab - 极简控制面协议实现
 agent-gateway-lab/
 ├── CLAUDE.md          # 本文件 - Claude配置
 ├── OUTLINE.md         # 项目地图
-├── REQUIREMENTS.md    # 需求文档
-├── ARCHITECTURE.md    # 架构设计
-├── CONVENTIONS.md     # 编码约定
-├── WORKFLOW.md        # 工作流日志
+├── README.md          # 项目入口
+├── docs/              # 文档 (需求/架构/规范)
+├── progress/          # 进度记录 (按阶段分文件)
 ├── spec/              # 协议规格
 ├── src/               # Java源代码
 ├── scripts/           # 验收脚本
