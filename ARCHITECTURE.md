@@ -214,11 +214,103 @@ public class Envelope {
 
 ## 5. 扩展点
 
-### 5.1 可选扩展 (加分项)
+### 5.1 AI Agent 扩展架构 (新增)
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                    Agent Gateway + AI Agent 架构                          │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│   ┌──────────┐     WebSocket     ┌───────────────────┐                 │
+│   │  Client  │◄────JSON────────►│  Gateway (Java)    │                 │
+│   │  Browser │                   │  - Netty WebSocket │                 │
+│   └──────────┘                   │  - 背压/路由       │                 │
+│                                  └─────────┬─────────┘                 │
+│                                            │ HTTP/WebSocket             │
+│                                            ▼                            │
+│                                  ┌───────────────────┐                 │
+│                                  │  AI Agent (Python) │                 │
+│                                  │  - LangChain       │                 │
+│                                  │  - 工具调用        │                 │
+│                                  └─────────┬─────────┘                 │
+│                                            │                            │
+│                       ┌────────────────────┼────────────────────┐      │
+│                       │                    │                    │      │
+│                       ▼                    ▼                    ▼      │
+│              ┌─────────────┐     ┌─────────────┐     ┌─────────────┐  │
+│              │   Ollama    │     │  LM Studio  │     │  OpenAI v1  │  │
+│              │ (本地模型)   │     │ (本地模型)   │     │ (云端API)   │  │
+│              └─────────────┘     └─────────────┘     └─────────────┘  │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+### 5.2 AI Agent 组件设计
+
+#### Python Agent 服务
+
+```python
+# ai_agent/agent.py
+from langchain.chat_models import ChatOllama
+from langchain.agents import AgentExecutor
+from langchain.tools import Tool
+
+class ClassroomAgent:
+    """查找空闲教室的 AI Agent"""
+    
+    def __init__(self):
+        self.llm = ChatOllama(model="qwen2:7b")
+        self.tools = [
+            Tool(name="search_classroom", func=self.search_classroom),
+            Tool(name="check_schedule", func=self.check_schedule),
+        ]
+        self.agent = AgentExecutor(llm=self.llm, tools=self.tools)
+    
+    def search_classroom(self, query: str) -> str:
+        """搜索空闲教室"""
+        pass
+    
+    def check_schedule(self, room_id: str) -> str:
+        """查询教室课表"""
+        pass
+```
+
+### 5.3 Telemetry 设计
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Telemetry 架构                            │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│   ┌───────────┐    ┌───────────┐    ┌───────────┐         │
+│   │   Logs    │    │  Metrics  │    │  Traces   │         │
+│   │ (Logback) │    │(Micrometer)│    │ (Jaeger)  │         │
+│   └─────┬─────┘    └─────┬─────┘    └─────┬─────┘         │
+│         │                │                │               │
+│         ▼                ▼                ▼               │
+│   ┌─────────────────────────────────────────────────┐     │
+│   │              Telemetry Collector                │     │
+│   │         (OpenTelemetry Collector)               │     │
+│   └─────────────────────────────────────────────────┘     │
+│                          │                                 │
+│         ┌────────────────┼────────────────┐               │
+│         ▼                ▼                ▼               │
+│   ┌───────────┐    ┌───────────┐    ┌───────────┐        │
+│   │    ELK    │    │ Prometheus│    │   Jaeger  │        │
+│   │   Stack   │    │ + Grafana │    │    UI     │        │
+│   └───────────┘    └───────────┘    └───────────┘        │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 5.4 可选扩展 (加分项)
 - [ ] 多Worker负载均衡
 - [ ] 断线重连续传
 - [ ] WebSocket + SSE 双承载
 - [ ] 更细粒度指标
+- [x] AI Agent 接入 (Ollama/LM Studio)
+- [x] 工具调用 (Function Calling)
+- [ ] Telemetry 完整实现
 
 ### 5.2 扩展预留接口
 
